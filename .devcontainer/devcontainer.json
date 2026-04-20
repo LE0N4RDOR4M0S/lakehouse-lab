@@ -1,0 +1,29 @@
+{
+    "name": "Data Lakehouse Lab",
+    "build": {
+        "dockerfile": "Dockerfile"
+    },
+    "runArgs": [
+        "--network=lakehouse-network"
+    ],
+    "customizations": {
+        "vscode": {
+            "extensions": [
+                "ms-python.python",
+                "ms-toolsai.jupyter",
+                "tamasfe.even-better-toml",
+                "me-akshay-ly.trino-sql"
+            ]
+        }
+    },
+    "remoteEnv": {
+        "SPARK_CONF_DIR": "/workspaces/${localWorkspaceFolderBasename}/conf"
+    },
+    "features": {
+        "ghcr.io/devcontainers/features/docker-in-docker:2": {
+            "moby": false
+        }
+    },
+    "forwardPorts": [8888, 8080, 9001],
+    "postCreateCommand": "echo 'Ambiente pronto!'"
+}
