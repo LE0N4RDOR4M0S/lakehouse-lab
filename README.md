@@ -13,6 +13,7 @@ A stack opera de forma desacoplada, separando armazenamento, catálogo e process
 * **Consulta Analítica (Query Engine):** Trino. Conecta no Hive Metastore, lê os metadados, vai ao MinIO e entrega os dados via SQL ANSI em milissegundos.
 
 **Subindo a infra:**
+
 ```bash
 docker compose up -d
 ```
@@ -25,11 +26,12 @@ O fluxo de dados segue o padrão Medallion Architecture para isolar a sujeira da
 * ** Camada Prata:** Higienização. Drop de nulos críticos, padronização de strings, uso intensivo de Regex para limpar máscaras de CNPJ/CPF e conversão de valores monetários para *float*.
 * ** Camada Ouro:** Regras de negócio e modelagem. JOINs entre tabelas fato e dimensão, agregações e criação de *flags* de auditoria. O dado fica pronto para ser consumido pelo Trino via DBeaver.
 
-## bjetivo Prático (Prova de Conceito)
+## Objetivo Prático (Prova de Conceito)
 
 A pipeline implementada valida a arquitetura cruzando duas bases massivas do Portal da Transparência:
-1.  **CEIS (Cadastro de Empresas Inidôneas e Suspensas):** Empresas proibidas de licitar/contratar com a administração pública.
-2.  **Pagamentos a Favorecidos (CGU):** Histórico de pagamentos efetuados pelo governo.
+
+1. **CEIS (Cadastro de Empresas Inidôneas e Suspensas):** Empresas proibidas de licitar/contratar com a administração pública.
+2. **Pagamentos a Favorecidos (CGU):** Histórico de pagamentos efetuados pelo governo.
 
 **A lógica aplicada:**
 Os scripts processam a base de pagamentos (Prata) e executam um `INNER JOIN` com o CEIS (Prata) usando o CNPJ higienizado como chave, gerando uma tabela (Ouro) que aponta CNPJs sancionados que constam na lista de recebimentos.
