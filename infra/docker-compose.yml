@@ -61,7 +61,7 @@ services:
     depends_on:
       kafka:
         condition: service_healthy
-    command: ["bash", "-c", "kafka-topics --bootstrap-server kafka:9092 --create --if-not-exists --topic favorecidos-pj --partitions 1 --replication-factor 1 && kafka-topics --bootstrap-server kafka:9092 --create --if-not-exists --topic ceis --partitions 1 --replication-factor 1 && kafka-topics --bootstrap-server kafka:9092 --create --if-not-exists --topic lakehouse-dlq --partitions 1 --replication-factor 1"]
+    command: ["bash", "-c", "kafka-topics --bootstrap-server kafka:9092 --create --if-not-exists --topic favorecidos-pj --partitions 1 --replication-factor 1 && kafka-topics --bootstrap-server kafka:9092 --create --if-not-exists --topic ceis --partitions 1 --replication-factor 1 && kafka-topics --bootstrap-server kafka:9092 --create --if-not-exists --topic fiplan --partitions 1 --replication-factor 1 && kafka-topics --bootstrap-server kafka:9092 --create --if-not-exists --topic ptax-bcb --partitions 1 --replication-factor 1 && kafka-topics --bootstrap-server kafka:9092 --create --if-not-exists --topic lakehouse-dlq --partitions 1 --replication-factor 1"]
     restart: "no"
     networks:
       - lakehouse-network
@@ -80,6 +80,30 @@ services:
     networks:
       - lakehouse-network
 
+  debezium-connect:
+    image: debezium/connect:2.7.3.Final
+    container_name: debezium-connect
+    depends_on:
+      kafka:
+        condition: service_healthy
+      metastore-db:
+        condition: service_healthy
+    ports:
+      - "8083:8083"
+    environment:
+      BOOTSTRAP_SERVERS: kafka:9092
+      GROUP_ID: debezium-connect
+      CONFIG_STORAGE_TOPIC: debezium-config
+      OFFSET_STORAGE_TOPIC: debezium-offset
+      STATUS_STORAGE_TOPIC: debezium-status
+      CONFIG_STORAGE_REPLICATION_FACTOR: 1
+      OFFSET_STORAGE_REPLICATION_FACTOR: 1
+      STATUS_STORAGE_REPLICATION_FACTOR: 1
+      CONNECT_INTERNAL_KEY_CONVERTER_SCHEMAS_ENABLE: "false"
+      CONNECT_INTERNAL_VALUE_CONVERTER_SCHEMAS_ENABLE: "false"
+    networks:
+      - lakehouse-network
+
   metastore-db:
     image: mariadb:10.5
     container_name: metastore-db
@@ -88,6 +112,7 @@ services:
       MYSQL_DATABASE: metastore_db
       MYSQL_USER: admin
       MYSQL_PASSWORD: password
+    command: --server-id=1 --log-bin=mysql-bin --binlog-format=ROW --expire-logs-days=10
     healthcheck:
       test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-ppassword"]
       interval: 5s
